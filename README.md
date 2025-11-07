@@ -36,7 +36,7 @@ A complete e-commerce grocery store application built with Java Spring Boot back
 - Account settings
 
 ### 🎨 Modern UI/UX
-- Blinkit-inspired clean and intuitive design
+- Modern, clean and intuitive design
 - Responsive design for all devices
 - Material-UI components
 - Loading states and error handling
@@ -308,7 +308,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Spring Boot team for the excellent framework
 - React.js community for the amazing ecosystem
 - Material-UI for the beautiful component library
-- Blinkit for UI/UX inspiration
+- Material-UI for modern UI components
 
 ---
 

@@ -24,7 +24,7 @@
   - Place Order button with loading state
   - Auto-redirect to orders page after successful order placement
 
-### 3. **Account/Profile Menu (Blinkit-style)** ✅
+### 3. **Account/Profile Menu (Modern-style)** ✅
 - **Header Update**: Replaced "Login" button with "Account" dropdown
 - **Account Dropdown Menu Items**:
   - 📍 My Addresses
@@ -49,7 +49,7 @@
   - Click "see all" navigates to `/category/:category`
   - Responsive card sizing (160-200px width)
 
-### 5. **Header Design Updates (Blinkit-style)** ✅
+### 5. **Header Design Updates (Modern-style)** ✅
 - **Logo**: Grocery logo displayed prominently
 - **Delivery Info**: "Delivery in 10 minutes" text added
 - **Location Selector**: Location icon with "Select Location" button

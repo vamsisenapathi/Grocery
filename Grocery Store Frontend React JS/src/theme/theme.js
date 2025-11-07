@@ -4,13 +4,13 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#0C831F', // Blinkit Green
+      main: '#0C831F', // Primary Green
       light: '#4CAF50',
       dark: '#087F23',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#F8C51B', // Blinkit Yellow/Orange for offers
+      main: '#F8C51B', // Secondary Yellow/Orange for offers
       light: '#FDD835',
       dark: '#F57F17',
       contrastText: '#000000',
@@ -123,7 +123,7 @@ const theme = createTheme({
     button: {
       fontWeight: 600,
       fontSize: '0.875rem',
-      textTransform: 'none', // Blinkit uses sentence case
+      textTransform: 'none', // Modern UI uses sentence case
       letterSpacing: '0.02em',
     },
     caption: {
@@ -141,7 +141,7 @@ const theme = createTheme({
   },
   spacing: 8, // 8px base spacing
   shape: {
-    borderRadius: 8, // Blinkit uses smaller border radius
+    borderRadius: 8, // Modern UI uses smaller border radius
   },
   shadows: [
     'none',

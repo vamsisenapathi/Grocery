@@ -5,7 +5,7 @@ import { CssBaseline, Box } from '@mui/material';
 import { Provider } from 'react-redux';
 import { SnackbarProvider } from 'notistack';
 import store from './redux/store';
-import theme from './theme/blinkitTheme';
+import theme from './theme/theme';
 import { AuthProvider } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
   Container,
   Typography,
-  Grid,
   CircularProgress,
   Alert,
   Button,
@@ -17,10 +17,16 @@ import ProductCard from '../../components/grocery/ProductCard';
 import CartDrawer from '../../components/grocery/CartDrawer';
 import { apiService } from '../../services/api.service';
 import { useNavigate } from 'react-router-dom';
-import { AVAILABLE_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../../apiActions';
+import { fetchCategories } from '../../redux/actions/productActions';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
+  // Redux state
+  const { categories } = useSelector(state => state.products);
+  
+  // Local state
   const [products, setProducts] = useState([]);
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +36,8 @@ const HomePage = () => {
   useEffect(() => {
     loadProducts();
     loadBanners();
-  }, []);
+    dispatch(fetchCategories()); // Load categories from backend
+  }, [dispatch]);
 
   const loadProducts = async () => {
     try {
@@ -92,7 +99,7 @@ const HomePage = () => {
     return acc;
   }, {});
 
-  const categories = Object.keys(groupedProducts).sort();
+  const productCategories = Object.keys(groupedProducts).sort();
 
   const handleBannerClick = (category) => {
     if (category) {
@@ -127,11 +134,11 @@ const HomePage = () => {
               borderRadius: 3,
             }
           }}>
-            {AVAILABLE_CATEGORIES.map((category) => (
+            {categories.filter(cat => cat !== 'All').map((category) => (
               <Chip
                 key={category}
-                label={CATEGORY_DISPLAY_NAMES[category] || category}
-                onClick={() => navigate(`/category/${category}`)}
+                label={category}
+                onClick={() => navigate(`/category/${category.toLowerCase()}`)}
                 sx={{
                   cursor: 'pointer',
                   fontWeight: 500,
@@ -188,7 +195,7 @@ const HomePage = () => {
           </Alert>
         ) : (
           <>
-            {categories.map((category) => (
+            {productCategories.map((category) => (
               <Box key={category} sx={{ mb: 5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h5" sx={{ fontWeight: 'bold' }}>

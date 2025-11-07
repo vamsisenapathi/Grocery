@@ -10,9 +10,12 @@ import {
   SET_SORT_BY,
   CLEAR_FILTERS,
   CLEAR_PRODUCT_ERROR,
+  FETCH_CATEGORIES_REQUEST,
+  FETCH_CATEGORIES_SUCCESS,
+  FETCH_CATEGORIES_FAILURE,
 } from "../actionTypes";
 
-import { categoryAPI, productAPI } from "../../apiActions";
+import { categoryAPI, productAPI, apiClient } from "../../apiActions";
 
 // ✅ Fetch All Products
 export const fetchProducts = () => {
@@ -115,6 +118,40 @@ export const setCategory = (category) => ({
   type: SET_CATEGORY,
   payload: category,
 });
+
+// ✅ Fetch Categories from Backend
+export const fetchCategories = () => {
+  return async (dispatch) => {
+    dispatch({ type: FETCH_CATEGORIES_REQUEST });
+
+    try {
+      console.log('📂 Fetching categories from backend...');
+      const response = await apiClient.get('/categories');
+      console.log('✅ Categories fetched successfully:', response.data);
+      
+      dispatch({
+        type: FETCH_CATEGORIES_SUCCESS,
+        payload: response.data,
+      });
+    } catch (error) {
+      console.error('❌ Fetch categories failed:', error);
+      let errorMessage = "Failed to fetch categories";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.request) {
+        errorMessage = "Cannot connect to server. Please check if the backend is running.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      dispatch({
+        type: FETCH_CATEGORIES_FAILURE,
+        payload: errorMessage,
+      });
+    }
+  };
+};
 
 // ✅ Set Sort By
 export const setSortBy = (sortBy) => ({

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
-  <!-- Background -->
-  <rect width="200" height="60" fill="white"/>
-  
-  <!-- "blinkit" text -->
-  <text x="20" y="40" font-family="Arial, sans-serif" font-weight="bold" font-size="28">
-    <tspan fill="#FFD400">blink</tspan><tspan fill="#00A651">it</tspan>
-  </text>
-</svg>

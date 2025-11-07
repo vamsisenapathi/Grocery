@@ -10,6 +10,9 @@ import {
   SET_SORT_BY,
   CLEAR_FILTERS,
   CLEAR_PRODUCT_ERROR,
+  FETCH_CATEGORIES_REQUEST,
+  FETCH_CATEGORIES_SUCCESS,
+  FETCH_CATEGORIES_FAILURE,
 } from "../actionTypes";
 
 const initialState = {
@@ -23,7 +26,7 @@ const initialState = {
     category: '',
     sortBy: 'name', // 'name', 'price-asc', 'price-desc'
   },
-  categories: ['All', 'Fruits', 'Vegetables', 'Dairy', 'Bakery', 'Meat', 'Seafood'],
+  categories: [], // Will be loaded dynamically from backend
 };
 
 // Helper function to apply filters
@@ -162,6 +165,32 @@ const productReducer = (state = initialState, action) => {
       return {
         ...state,
         error: null,
+      };
+
+    // Category actions
+    case FETCH_CATEGORIES_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+
+    case FETCH_CATEGORIES_SUCCESS:
+      // Transform backend categories to frontend format
+      const categories = ['All', ...action.payload.map(cat => cat.name)];
+      return {
+        ...state,
+        loading: false,
+        categories: categories,
+        error: null,
+      };
+
+    case FETCH_CATEGORIES_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+        categories: ['All'], // Fallback to basic categories
       };
 
     default:

@@ -10,13 +10,16 @@ import {
   Button,
   useTheme,
   CircularProgress,
-  Alert,
+  Card,
+  CardContent,
+  Avatar,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Add as AddIcon,
   Remove as RemoveIcon,
   Delete as DeleteIcon,
+  ShoppingCart as CartIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -37,7 +40,7 @@ const CartDrawer = ({ open, onClose }) => {
     if (open) {
       loadCart();
     }
-  }, [open]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadCart = async () => {
     try {
@@ -52,60 +55,57 @@ const CartDrawer = ({ open, onClose }) => {
     }
   };
 
-  const handleRemoveItem = async (cartItemId) => {
+  const handleRemoveItem = async (cartItemId, productName = 'Item') => {
+    if (!cartItemId) {
+      enqueueSnackbar('Invalid item ID', { variant: 'error' });
+      return;
+    }
+
     try {
       setActionLoading(prev => ({ ...prev, [`delete_${cartItemId}`]: true }));
       await apiService.cart.removeItem(cartItemId);
       await loadCart();
       cartEvents.emit(); // Notify other components
-      enqueueSnackbar('Item removed from cart', { variant: 'success' });
+      enqueueSnackbar(`${productName} removed from cart`, { variant: 'success' });
     } catch (error) {
-      enqueueSnackbar('Failed to remove item', { variant: 'error' });
+      console.error('Remove item error:', error);
+      enqueueSnackbar(`Failed to remove ${productName}`, { variant: 'error' });
     } finally {
       setActionLoading(prev => ({ ...prev, [`delete_${cartItemId}`]: false }));
     }
   };
 
-  const handleIncrement = async (productId, currentQuantity, cartItemId) => {
+  const handleQuantityChange = async (cartItemId, newQuantity, productName = 'Item') => {
+    if (!cartItemId || newQuantity < 0) {
+      enqueueSnackbar('Invalid quantity', { variant: 'error' });
+      return;
+    }
+
+    if (newQuantity === 0) {
+      return handleRemoveItem(cartItemId, productName);
+    }
+
     try {
-      setActionLoading(prev => ({ ...prev, [`inc_${productId}`]: true }));
-      // Use updateItem to send absolute quantity to backend (avoid negative/delta payloads)
-      if (cartItemId) {
-        await apiService.cart.updateItem(cartItemId, (currentQuantity || 0) + 1);
-      } else {
-        // fallback: add as new item
-        await apiService.cart.addItem(productId, 1);
-      }
+      setActionLoading(prev => ({ ...prev, [`update_${cartItemId}`]: true }));
+      await apiService.cart.updateItem(cartItemId, newQuantity);
       await loadCart();
       cartEvents.emit(); // Notify other components
     } catch (error) {
-      enqueueSnackbar('Failed to update quantity', { variant: 'error' });
+      console.error('Update quantity error:', error);
+      enqueueSnackbar(`Failed to update ${productName} quantity`, { variant: 'error' });
     } finally {
-      setActionLoading(prev => ({ ...prev, [`inc_${productId}`]: false }));
+      setActionLoading(prev => ({ ...prev, [`update_${cartItemId}`]: false }));
     }
   };
 
-  const handleDecrement = async (productId, currentQuantity, cartItemId) => {
-    try {
-      setActionLoading(prev => ({ ...prev, [`dec_${productId}`]: true }));
-      if (currentQuantity === 1) {
-        await handleRemoveItem(cartItemId);
-      } else {
-        // Update to absolute quantity (currentQuantity - 1)
-        if (cartItemId) {
-          await apiService.cart.updateItem(cartItemId, currentQuantity - 1);
-        } else {
-          // fallback to post decrement (legacy behavior)
-          await apiService.cart.decrementItem(productId);
-        }
-        await loadCart();
-      }
-      cartEvents.emit(); // Notify other components
-    } catch (error) {
-      enqueueSnackbar('Failed to update quantity', { variant: 'error' });
-    } finally {
-      setActionLoading(prev => ({ ...prev, [`dec_${productId}`]: false }));
-    }
+  const handleIncrement = async (cartItem) => {
+    const newQuantity = (cartItem.quantity || 0) + 1;
+    await handleQuantityChange(cartItem.id, newQuantity, cartItem.productName);
+  };
+
+  const handleDecrement = async (cartItem) => {
+    const newQuantity = (cartItem.quantity || 0) - 1;
+    await handleQuantityChange(cartItem.id, newQuantity, cartItem.productName);
   };
 
   const handleProceedToCheckout = () => {
@@ -147,74 +147,109 @@ const CartDrawer = ({ open, onClose }) => {
               <CircularProgress />
             </Box>
           ) : !cart || !cart.items || cart.items.length === 0 ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', px: 3 }}>
+              <Avatar sx={{ bgcolor: 'grey.100', width: 80, height: 80, mb: 3 }}>
+                <CartIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+              </Avatar>
+              <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontWeight: 600 }}>
                 Your cart is empty
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Add items to get started
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3, opacity: 0.8 }}>
+                Add items to get started with your shopping
               </Typography>
-              <Button variant="contained" onClick={() => { navigate('/'); onClose(); }}>
+              <Button 
+                variant="contained" 
+                onClick={() => { navigate('/'); onClose(); }}
+                sx={{ px: 4, py: 1.5, borderRadius: 2 }}
+              >
                 Start Shopping
               </Button>
             </Box>
           ) : (
-            <List>
+            <List sx={{ py: 0 }}>
               {cart.items.map((item, index) => (
                 <React.Fragment key={item.id}>
-                  <ListItem sx={{ px: 0, alignItems: 'flex-start' }}>
-                    <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                      <Box
-                        component="img"
-                        src={item.product?.imageUrl || 'https://via.placeholder.com/80'}
-                        alt={item.product?.name}
-                        sx={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 1 }}
-                      />
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                          {item.product?.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          ₹{item.price?.toFixed(2)}
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleDecrement(item.productId, item.quantity, item.id)}
-                              disabled={actionLoading[`dec_${item.productId}`]}
-                              sx={{ p: 0.5 }}
-                            >
-                              {actionLoading[`dec_${item.productId}`] ? <CircularProgress size={14} /> : <RemoveIcon fontSize="small" />}
-                            </IconButton>
-                            <Typography sx={{ px: 1.5, fontWeight: 'bold' }}>
-                              {item.quantity}
+                  <ListItem sx={{ px: 0, py: 2 }}>
+                    <Card sx={{ width: '100%', boxShadow: 'none', border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                          <Box
+                            component="img"
+                            src={item.product?.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=80&h=80&fit=crop&crop=center'}
+                            alt={item.product?.name || item.productName || 'Product'}
+                            sx={{ 
+                              width: 60, 
+                              height: 60, 
+                              objectFit: 'cover', 
+                              borderRadius: 1.5,
+                              border: `1px solid ${theme.palette.divider}`
+                            }}
+                          />
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5, lineHeight: 1.3 }}>
+                              {item.product?.name || item.productName || 'Product'}
                             </Typography>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleIncrement(item.productId, item.quantity, item.id)}
-                              disabled={actionLoading[`inc_${item.productId}`]}
-                              sx={{ p: 0.5 }}
-                            >
-                              {actionLoading[`inc_${item.productId}`] ? <CircularProgress size={14} /> : <AddIcon fontSize="small" />}
-                            </IconButton>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                              ₹{(item.price || item.product?.price || 0).toFixed(2)} each
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                border: `1px solid ${theme.palette.primary.main}`, 
+                                borderRadius: 1.5,
+                                bgcolor: 'background.paper'
+                              }}>
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => handleDecrement(item)}
+                                  disabled={actionLoading[`update_${item.id}`] || item.quantity <= 0}
+                                  sx={{ 
+                                    p: 0.5, 
+                                    color: theme.palette.primary.main,
+                                    '&:hover': { bgcolor: theme.palette.primary.light + '20' }
+                                  }}
+                                >
+                                  {actionLoading[`update_${item.id}`] ? <CircularProgress size={14} /> : <RemoveIcon fontSize="small" />}
+                                </IconButton>
+                                <Typography sx={{ px: 2, py: 0.5, fontWeight: 'bold', minWidth: 32, textAlign: 'center' }}>
+                                  {item.quantity || 0}
+                                </Typography>
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => handleIncrement(item)}
+                                  disabled={actionLoading[`update_${item.id}`]}
+                                  sx={{ 
+                                    p: 0.5, 
+                                    color: theme.palette.primary.main,
+                                    '&:hover': { bgcolor: theme.palette.primary.light + '20' }
+                                  }}
+                                >
+                                  {actionLoading[`update_${item.id}`] ? <CircularProgress size={14} /> : <AddIcon fontSize="small" />}
+                                </IconButton>
+                              </Box>
+                              <IconButton 
+                                size="small" 
+                                onClick={() => handleRemoveItem(item.id, item.product?.name || item.productName)}
+                                disabled={actionLoading[`delete_${item.id}`]}
+                                sx={{ 
+                                  color: 'error.main',
+                                  '&:hover': { bgcolor: 'rgba(244, 67, 54, 0.08)' }
+                                }}
+                              >
+                                {actionLoading[`delete_${item.id}`] ? <CircularProgress size={16} color="error" /> : <DeleteIcon fontSize="small" />}
+                              </IconButton>
+                            </Box>
                           </Box>
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleRemoveItem(item.id)}
-                            disabled={actionLoading[`delete_${item.id}`]}
-                            color="error"
-                          >
-                            {actionLoading[`delete_${item.id}`] ? <CircularProgress size={16} color="error" /> : <DeleteIcon fontSize="small" />}
-                          </IconButton>
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
+                              ₹{(item.totalPrice || (item.quantity * (item.price || item.product?.price || 0))).toFixed(2)}
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Box>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        ₹{item.totalPrice?.toFixed(2)}
-                      </Typography>
-                    </Box>
+                      </CardContent>
+                    </Card>
                   </ListItem>
-                  {index < cart.items.length - 1 && <Divider sx={{ my: 1 }} />}
                 </React.Fragment>
               ))}
             </List>

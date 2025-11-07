@@ -82,8 +82,30 @@ export const cartAPI = {
     }
   },
 
+  // Update cart item quantity (alias for compatibility)
+  updateItem: async (cartItemId, quantity) => {
+    try {
+      const response = await apiClient.put(`/cart/items/${cartItemId}`, { quantity });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update cart item:', error);
+      throw new Error(`Failed to update cart item: ${error.response?.data?.message || error.message}`);
+    }
+  },
+
   // Remove item from cart
   removeFromCart: async (cartItemId) => {
+    try {
+      const response = await apiClient.delete(`/cart/items/${cartItemId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to remove item from cart:', error);
+      throw new Error(`Failed to remove item from cart: ${error.response?.data?.message || error.message}`);
+    }
+  },
+
+  // Remove item from cart (alias for compatibility)
+  removeItem: async (cartItemId) => {
     try {
       const response = await apiClient.delete(`/cart/items/${cartItemId}`);
       return response.data;

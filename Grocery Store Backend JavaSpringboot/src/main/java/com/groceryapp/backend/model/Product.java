@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Product entity with complete Blinkit-style structure
+ * Product entity with complete grocery store structure
  * Supports hierarchical categories, brands, inventory, ratings, and discounts
  */
 @Entity
