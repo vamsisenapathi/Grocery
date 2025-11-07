@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Green background in square shape -->
+  <rect width="400" height="400" fill="#5CB85C"/>
+  
+  <!-- GroCery text - Yellow "Gro" + White "Cery" -->
+  <defs>
+    <style>
+      .grocery-text {
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        font-size: 85px;
+      }
+    </style>
+  </defs>
+  
+  <!-- "Gro" in yellow/gold (#E6B800) -->
+  <text x="40" y="230" class="grocery-text" fill="#E6B800">Gro</text>
+  
+  <!-- "Cery" in white for contrast on green background -->
+  <text x="195" y="230" class="grocery-text" fill="#FFFFFF">Cery</text>
+</svg>

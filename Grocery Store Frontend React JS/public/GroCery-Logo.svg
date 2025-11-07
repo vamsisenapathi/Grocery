@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 250">
+  <!-- White background rectangular -->
+  <rect width="800" height="250" fill="#FFFFFF"/>
+  
+  <!-- GroCery Logo with shadow effect -->
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- "Gro" in yellow/gold (#E6B800) -->
+  <text x="60" y="170" font-family="Arial, sans-serif" font-weight="bold" font-size="130" fill="#E6B800" filter="url(#shadow)">Gro</text>
+  
+  <!-- "Cery" in green (#5CB85C) -->
+  <text x="375" y="170" font-family="Arial, sans-serif" font-weight="bold" font-size="130" fill="#5CB85C" filter="url(#shadow)">Cery</text>
+</svg>
