@@ -198,7 +198,7 @@ class ProductControllerTest {
         verify(productService, times(1)).deleteProduct(productId);
     }
 
-    // ========== BRANCH COVERAGE TEST ==========
+    // ========== BRANCH COVERAGE TESTS ==========
 
     @Test
     void getAllProducts_WithEmptySearchQuery_ShouldReturnAllProducts() throws Exception {
@@ -214,5 +214,64 @@ class ProductControllerTest {
 
         verify(productService, times(1)).getAllProducts();
         verify(productService, never()).searchProducts(anyString());
+    }
+
+    @Test
+    void getAllProducts_WithSearchQueryAndWhitespace_ShouldTrimAndSearch() throws Exception {
+        // Tests that search query is trimmed before passing to service
+        List<ProductResponseDto> products = Arrays.asList(productResponse);
+        when(productService.searchProducts("apple")).thenReturn(products);
+
+        mockMvc.perform(get("/products")
+                        .param("search", "  apple  "))  // Search with whitespace
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Apple"));
+
+        verify(productService, times(1)).searchProducts("apple");
+    }
+
+    @Test
+    void searchProducts_WithWhitespace_ShouldTrimQuery() throws Exception {
+        // Tests that /search endpoint also trims query
+        List<ProductResponseDto> products = Arrays.asList(productResponse);
+        when(productService.searchProducts("banana")).thenReturn(products);
+
+        mockMvc.perform(get("/products/search")
+                        .param("query", "  banana  "))
+                .andExpect(status().isOk());
+
+        verify(productService, times(1)).searchProducts("banana");
+    }
+
+    @Test
+    void getAllProducts_WithBothCategoryAndSubcategory_ShouldPrioritizeSubcategory() throws Exception {
+        // Tests that subcategoryId takes priority over categoryId in the if-else chain
+        List<ProductResponseDto> products = Arrays.asList(productResponse);
+        when(productService.getProductsBySubcategory(subcategoryId)).thenReturn(products);
+
+        mockMvc.perform(get("/products")
+                        .param("categoryId", categoryId.toString())
+                        .param("subcategoryId", subcategoryId.toString()))
+                .andExpect(status().isOk());
+
+        verify(productService, times(1)).getProductsBySubcategory(subcategoryId);
+        verify(productService, never()).getProductsByCategory(any());
+    }
+
+    @Test
+    void getAllProducts_WithSearchAndCategoryAndSubcategory_ShouldPrioritizeSearch() throws Exception {
+        // Tests that search takes highest priority in the if-else chain
+        List<ProductResponseDto> products = Arrays.asList(productResponse);
+        when(productService.searchProducts("apple")).thenReturn(products);
+
+        mockMvc.perform(get("/products")
+                        .param("search", "apple")
+                        .param("categoryId", categoryId.toString())
+                        .param("subcategoryId", subcategoryId.toString()))
+                .andExpect(status().isOk());
+
+        verify(productService, times(1)).searchProducts("apple");
+        verify(productService, never()).getProductsBySubcategory(any());
+        verify(productService, never()).getProductsByCategory(any());
     }
 }
