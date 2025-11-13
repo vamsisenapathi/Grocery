@@ -23,7 +23,7 @@ class GeolocationControllerTest {
     @Test
     void reverseGeocode_WithValidCoordinates_ShouldReturnAddress() throws Exception {
         // Using coordinates for a known location (will call real API or fallback to default)
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "28.6139")
                         .param("longitude", "77.2090"))
                 .andExpect(status().isOk())
@@ -37,7 +37,7 @@ class GeolocationControllerTest {
 
     @Test
     void reverseGeocode_WithZeroCoordinates_ShouldReturnDefaultAddress() throws Exception {
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "0.0")
                         .param("longitude", "0.0"))
                 .andExpect(status().isOk())
@@ -47,7 +47,7 @@ class GeolocationControllerTest {
 
     @Test
     void reverseGeocode_WithNegativeCoordinates_ShouldReturnAddress() throws Exception {
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "-33.8688")
                         .param("longitude", "151.2093"))
                 .andExpect(status().isOk())
@@ -57,7 +57,7 @@ class GeolocationControllerTest {
 
     @Test
     void reverseGeocode_WithHighPrecisionCoordinates_ShouldReturnAddress() throws Exception {
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "12.9715987")
                         .param("longitude", "77.5945627"))
                 .andExpect(status().isOk())
@@ -73,7 +73,7 @@ class GeolocationControllerTest {
     @Test
     void reverseGeocode_WithBoundaryLatitude_ShouldReturnAddress() throws Exception {
         // Test northern hemisphere boundary
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "89.9")
                         .param("longitude", "0.0"))
                 .andExpect(status().isOk())
@@ -84,7 +84,7 @@ class GeolocationControllerTest {
     @Test
     void reverseGeocode_WithBoundaryLongitude_ShouldReturnAddress() throws Exception {
         // Test eastern hemisphere boundary
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "0.0")
                         .param("longitude", "179.9"))
                 .andExpect(status().isOk())
@@ -95,7 +95,7 @@ class GeolocationControllerTest {
     @Test
     void reverseGeocode_WithIndianCoordinates_ShouldReturnIndianAddress() throws Exception {
         // Delhi coordinates
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "28.7041")
                         .param("longitude", "77.1025"))
                 .andExpect(status().isOk())
@@ -107,7 +107,7 @@ class GeolocationControllerTest {
     @Test
     void reverseGeocode_WithUSCoordinates_ShouldReturnUSAddress() throws Exception {
         // New York coordinates
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "40.7128")
                         .param("longitude", "-74.0060"))
                 .andExpect(status().isOk())
@@ -118,7 +118,7 @@ class GeolocationControllerTest {
     @Test
     void reverseGeocode_WithRemoteOceanCoordinates_ShouldReturnDefaultAddress() throws Exception {
         // Middle of Pacific Ocean - should fallback to default
-        mockMvc.perform(get("/api/v1/geolocation/reverse-geocode")
+        mockMvc.perform(get("/geolocation/reverse-geocode")
                         .param("latitude", "0.0")
                         .param("longitude", "-140.0"))
                 .andExpect(status().isOk())

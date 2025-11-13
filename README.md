@@ -43,7 +43,7 @@ The Grocery Store application is a comprehensive e-commerce solution designed fo
 - **Order Tracking** with order numbers and status updates
 - **Address Management** with geolocation support (Nominatim API)
 - **Responsive Design** optimized for all devices
-- **93% Backend Test Coverage** (360 tests passing)
+- **91% Backend Test Coverage** (360 tests passing)
 - **765 Frontend Tests** passing with comprehensive coverage
 
 ---
@@ -815,7 +815,7 @@ Coverage by Package:
 ├── Service Package: 95% ✅
 ├── Controller Package: 80% ✅
 ├── Repository Package: 100% (Spring Data JPA) ✅
-└── Overall Coverage: 93% ✅
+└── Overall Coverage: 91% ✅
 
 ⚠️ Note: GeolocationControllerTest has 9 tests that require Nominatim API mocking.
 These tests validate the integration with external geolocation services.
