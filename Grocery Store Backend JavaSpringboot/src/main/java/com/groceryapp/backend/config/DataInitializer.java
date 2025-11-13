@@ -37,7 +37,7 @@ public class DataInitializer {
             // Create Brands
             Brand amul = createBrand("Amul", "India's leading dairy brand", "https://example.com/amul-logo.png");
             Brand tata = createBrand("Tata", "Tata Consumer Products", "https://example.com/tata-logo.png");
-            Brand nestle = createBrand("Nestle", "Global food and beverage company", "https://example.com/nestle-logo.png");
+            // Brand nestle = createBrand("Nestle", "Global food and beverage company", "https://example.com/nestle-logo.png");
             Brand britannia = createBrand("Britannia", "Leading biscuit manufacturer", "https://example.com/britannia-logo.png");
             Brand haldiram = createBrand("Haldiram's", "Popular Indian snacks brand", "https://example.com/haldiram-logo.png");
             
@@ -47,7 +47,7 @@ public class DataInitializer {
             Category fruitsVeg = createCategory("Fruits & Vegetables", "Fresh fruits and vegetables", 1);
             Subcategory freshFruits = createSubcategory("Fresh Fruits", "Seasonal fresh fruits", fruitsVeg, 1);
             Subcategory freshVegetables = createSubcategory("Fresh Vegetables", "Farm fresh vegetables", fruitsVeg, 2);
-            Subcategory exoticFruits = createSubcategory("Exotic Fruits", "Imported exotic fruits", fruitsVeg, 3);
+            // Subcategory exoticFruits = createSubcategory("Exotic Fruits", "Imported exotic fruits", fruitsVeg, 3);
             
             // 2. Dairy & Bakery
             Category dairy = createCategory("Dairy & Bakery", "Milk, bread, and bakery items", 2);
@@ -68,14 +68,14 @@ public class DataInitializer {
             Subcategory oil = createSubcategory("Oils & Ghee", "Cooking oils", groceries, 3);
             
             // 5. Personal Care
-            Category personal = createCategory("Personal Care", "Health and hygiene products", 5);
-            Subcategory skincare = createSubcategory("Skin Care", "Face and body care", personal, 1);
-            Subcategory haircare = createSubcategory("Hair Care", "Shampoos and conditioners", personal, 2);
+            // Category personal = createCategory("Personal Care", "Health and hygiene products", 5);
+            // Subcategory skincare = createSubcategory("Skin Care", "Face and body care", personal, 1);
+            // Subcategory haircare = createSubcategory("Hair Care", "Shampoos and conditioners", personal, 2);
             
             // 6. Household Items
-            Category household = createCategory("Household Items", "Cleaning and home essentials", 6);
-            Subcategory cleaning = createSubcategory("Cleaning Supplies", "Detergents and cleaners", household, 1);
-            Subcategory kitchenware = createSubcategory("Kitchen Essentials", "Utensils and accessories", household, 2);
+            // Category household = createCategory("Household Items", "Cleaning and home essentials", 6);
+            // Subcategory cleaning = createSubcategory("Cleaning Supplies", "Detergents and cleaners", household, 1);
+            // Subcategory kitchenware = createSubcategory("Kitchen Essentials", "Utensils and accessories", household, 2);
             
             log.info("Created categories and subcategories");
             

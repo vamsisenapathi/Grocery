@@ -35,17 +35,25 @@ public class OrderService {
     public OrderResponseDto createOrder(CreateOrderRequestDto requestDto) {
         log.info("Creating order for user: {}", requestDto.getUserId());
         
+        // Validate items
+        if (requestDto.getItems() == null || requestDto.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Cart items cannot be empty");
+        }
+        
         // Fetch delivery address
         Address deliveryAddress = addressRepository.findById(requestDto.getDeliveryAddressId())
                 .orElseThrow(() -> new AddressNotFoundException(requestDto.getDeliveryAddressId()));
+        
+        // Normalize payment method to uppercase
+        String normalizedPaymentMethod = requestDto.getPaymentMethod().toUpperCase();
         
         // Create order
         Order order = new Order();
         order.setUserId(requestDto.getUserId());
         order.setOrderNumber(generateOrderNumber());
         order.setStatus("PENDING");
-        order.setPaymentMethod(requestDto.getPaymentMethod());
-        order.setPaymentStatus(requestDto.getPaymentMethod().equals("COD") ? "PENDING" : "PENDING");
+        order.setPaymentMethod(normalizedPaymentMethod);
+        order.setPaymentStatus(normalizedPaymentMethod.equals("COD") ? "PENDING" : "PENDING");
         
         // Set delivery address
         order.setDeliveryName(deliveryAddress.getFullName());

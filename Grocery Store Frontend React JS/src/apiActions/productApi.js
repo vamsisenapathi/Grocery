@@ -1,70 +1,38 @@
+import { createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from './baseApi';
 
-// ============ PRODUCT API FUNCTIONS ============
-export const productAPI = {
-  // Get all products
-  getAllProducts: async () => {
+export const fetchProducts = createAsyncThunk(
+  'products/fetchProducts',
+  async (_, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/products');
-      return response.data;
+      return response.data || [];
     } catch (error) {
-      console.error('Failed to fetch all products:', error);
-      throw new Error(`Failed to fetch products: ${error.response?.data?.message || error.message}`);
+      return rejectWithValue(error.response?.data || 'Failed to fetch products');
     }
-  },
+  }
+);
 
-  // Get product by ID
-  getProductById: async (productId) => {
+export const fetchProductById = createAsyncThunk(
+  'products/fetchProductById',
+  async (productId, { rejectWithValue }) => {
     try {
       const response = await apiClient.get(`/products/${productId}`);
       return response.data;
     } catch (error) {
-      console.error(`Failed to fetch product ${productId}:`, error);
-      throw new Error(`Failed to fetch product: ${error.response?.data?.message || error.message}`);
-    }
-  },
-
-  // Search products
-  searchProducts: async (query) => {
-    try {
-      const response = await apiClient.get('/products', {
-        params: { search: query }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to search products:', error);
-      throw new Error(`Failed to search products: ${error.response?.data?.message || error.message}`);
-    }
-  },
-
-  // Get featured products
-  getFeaturedProducts: async () => {
-    try {
-      const response = await apiClient.get('/products', {
-        params: { featured: true }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch featured products:', error);
-      throw new Error(`Failed to fetch featured products: ${error.response?.data?.message || error.message}`);
-    }
-  },
-
-  // Get products by price range
-  getProductsByPriceRange: async (minPrice, maxPrice) => {
-    try {
-      const response = await apiClient.get('/products', {
-        params: { 
-          minPrice: minPrice,
-          maxPrice: maxPrice
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch products by price range:', error);
-      throw new Error(`Failed to fetch products by price range: ${error.response?.data?.message || error.message}`);
+      return rejectWithValue(error.response?.data || 'Failed to fetch product');
     }
   }
-};
+);
 
-export default productAPI;
+export const searchProducts = createAsyncThunk(
+  'products/searchProducts',
+  async (searchTerm, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get(`/products/search?q=${searchTerm}`);
+      return response.data || [];
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Failed to search products');
+    }
+  }
+);

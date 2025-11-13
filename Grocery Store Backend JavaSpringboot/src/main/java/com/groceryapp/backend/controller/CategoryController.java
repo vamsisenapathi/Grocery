@@ -23,6 +23,19 @@ public class CategoryController {
     private final ProductService productService;
     
     /**
+     * Get all unique category names from products
+     * 
+     * @return List of all distinct category names
+     */
+    @GetMapping
+    public ResponseEntity<List<String>> getAllCategories() {
+        log.info("Received request to get all categories");
+        List<String> categories = productService.getAllCategories();
+        log.info("Found {} unique categories", categories.size());
+        return ResponseEntity.ok(categories);
+    }
+    
+    /**
      * Get products by category name (supports kebab-case URLs)
      * 
      * Examples:

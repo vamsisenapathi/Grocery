@@ -10,7 +10,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -23,6 +23,24 @@ spring:
     init:
       mode: never
       data-locations: classpath:data.sql
+  
+  # Email Configuration (Optional - for OTP sending)
+  # Uncomment and configure to enable email OTP
+  # mail:
+  #   host: smtp.gmail.com
+  #   port: 587
+  #   username: your-email@gmail.com
+  #   password: your-app-password
+  #   properties:
+  #     mail:
+  #       smtp:
+  #         auth: true
+  #         starttls:
+  #           enable: true
+  #           required: true
+  #         connectiontimeout: 5000
+  #         timeout: 5000
+  #         writetimeout: 5000
 
 server:
   port: 8081
@@ -33,6 +51,20 @@ server:
 jwt:
   secret: grocery-store-secret-key-for-jwt-token-generation-minimum-256-bits-required-for-hs256-algorithm
   expiration: 86400000 # 24 hours in milliseconds
+
+# App Configuration
+app:
+  name: Grocery Store
+
+# Twilio Configuration (Optional - for SMS OTP)
+# Uncomment and configure to enable SMS OTP
+# twilio:
+#   account:
+#     sid: your-twilio-account-sid
+#   auth:
+#     token: your-twilio-auth-token
+#   phone:
+#     number: your-twilio-phone-number
 
 logging:
   level:

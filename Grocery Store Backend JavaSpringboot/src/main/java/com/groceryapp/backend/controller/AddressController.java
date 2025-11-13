@@ -17,54 +17,52 @@ import java.util.UUID;
 @RequestMapping("/addresses")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AddressController {
-    
+
     private final AddressService addressService;
-    
+
     @PostMapping
     public ResponseEntity<AddressResponseDto> createAddress(@Valid @RequestBody AddressRequestDto requestDto) {
-        log.info("Received request to create address for user: {}", requestDto.getUserId());
-        AddressResponseDto address = addressService.createAddress(requestDto);
-        return new ResponseEntity<>(address, HttpStatus.CREATED);
+        log.info("REST API: Creating address for user: {}", requestDto.getUserId());
+        AddressResponseDto response = addressService.createAddress(requestDto);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
-    
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<AddressResponseDto>> getUserAddresses(@PathVariable UUID userId) {
-        log.info("Received request to get addresses for user: {}", userId);
+        log.info("REST API: Getting addresses for user: {}", userId);
         List<AddressResponseDto> addresses = addressService.getUserAddresses(userId);
         return ResponseEntity.ok(addresses);
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<AddressResponseDto> getAddressById(@PathVariable UUID id) {
-        log.info("Received request to get address with ID: {}", id);
-        AddressResponseDto address = addressService.getAddressById(id);
-        return ResponseEntity.ok(address);
+        log.info("REST API: Getting address by ID: {}", id);
+        AddressResponseDto response = addressService.getAddressById(id);
+        return ResponseEntity.ok(response);
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<AddressResponseDto> updateAddress(
             @PathVariable UUID id,
             @Valid @RequestBody AddressRequestDto requestDto) {
-        log.info("Received request to update address with ID: {}", id);
-        AddressResponseDto address = addressService.updateAddress(id, requestDto);
-        return ResponseEntity.ok(address);
+        log.info("REST API: Updating address with ID: {}", id);
+        AddressResponseDto response = addressService.updateAddress(id, requestDto);
+        return ResponseEntity.ok(response);
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAddress(@PathVariable UUID id) {
-        log.info("Received request to delete address with ID: {}", id);
+        log.info("REST API: Deleting address with ID: {}", id);
         addressService.deleteAddress(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     @PatchMapping("/{id}/set-default")
-    public ResponseEntity<AddressResponseDto> setDefaultAddress(
-            @PathVariable UUID id,
-            @RequestParam UUID userId) {
-        log.info("Received request to set address {} as default for user {}", id, userId);
-        AddressResponseDto address = addressService.setDefaultAddress(id, userId);
-        return ResponseEntity.ok(address);
+    public ResponseEntity<AddressResponseDto> setDefaultAddress(@PathVariable UUID id) {
+        log.info("REST API: Setting address as default with ID: {}", id);
+        AddressResponseDto response = addressService.setDefaultAddress(id);
+        return ResponseEntity.ok(response);
     }
 }

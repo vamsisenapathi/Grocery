@@ -1,386 +1,375 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Container,
-  Typography,
-  Paper,
   Box,
+  Paper,
+  Typography,
   Button,
   Card,
   CardContent,
-  CardActions,
+  Grid,
+  Chip,
+  IconButton,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  Grid,
-  Chip,
-  IconButton,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon,
   Home as HomeIcon,
   Work as WorkIcon,
-  LocationOn as LocationIcon,
 } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/grocery/Header';
+import AddressForm from '../components/AddressForm';
+import {
+  fetchAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+} from '../redux/actions/addressActions';
+import { getUserId, isGuestUser } from '../utils/userUtils';
 
 const SavedAddressesPage = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [addresses, setAddresses] = useState([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingAddress, setEditingAddress] = useState(null);
-  const [formData, setFormData] = useState({
-    label: '',
-    name: '',
-    phone: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    pincode: '',
-    isDefault: false,
-  });
+  const [formOpen, setFormOpen] = useState(false);
+  const [editAddress, setEditAddress] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
 
   const storeData = useSelector((state) => {
     return {
-      isAuthenticated: state?.auth?.isAuthenticated,
-      user: state?.auth?.user,
+      addresses: state?.addresses?.addresses || [],
+      loading: state?.addresses?.loading || false,
+      error: state?.addresses?.error,
     };
   });
 
-  const { isAuthenticated } = storeData;
+  const isGuest = isGuestUser();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
+    // Only fetch addresses for authenticated users with valid UUID
+    if (!isGuest) {
+      const userId = getUserId();
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (userId && uuidRegex.test(userId)) {
+        dispatch(fetchAddresses());
+      }
     }
+  }, [dispatch, isGuest]);
 
-    // Load saved addresses from localStorage (in real app, this would come from API)
-    const savedAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-    setAddresses(savedAddresses);
-  }, [isAuthenticated, navigate]);
-
-  const handleOpenDialog = (address = null) => {
+  const handleOpenForm = (address = null) => {
     if (address) {
-      setEditingAddress(address);
-      setFormData(address);
-    } else {
-      setEditingAddress(null);
-      setFormData({
-        label: '',
-        name: '',
-        phone: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        state: '',
-        pincode: '',
-        isDefault: false,
+      setEditAddress({
+        ...address,
+        name: address.fullName,
+        phone: address.phoneNumber,
       });
-    }
-    setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingAddress(null);
-  };
-
-  const handleInputChange = (event) => {
-    const { name, value, type, checked } = event.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleSaveAddress = () => {
-    if (!formData.name || !formData.addressLine1 || !formData.city || !formData.pincode) {
-      alert('Please fill in all required fields');
-      return;
-    }
-
-    const newAddress = {
-      ...formData,
-      id: editingAddress ? editingAddress.id : Date.now(),
-    };
-
-    let updatedAddresses;
-    if (editingAddress) {
-      updatedAddresses = addresses.map(addr => 
-        addr.id === editingAddress.id ? newAddress : addr
-      );
     } else {
-      updatedAddresses = [...addresses, newAddress];
+      setEditAddress(null);
     }
-
-    // If this is set as default, remove default from others
-    if (newAddress.isDefault) {
-      updatedAddresses = updatedAddresses.map(addr => ({
-        ...addr,
-        isDefault: addr.id === newAddress.id,
-      }));
-    }
-
-    setAddresses(updatedAddresses);
-    localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-    handleCloseDialog();
+    setFormOpen(true);
   };
 
-  const handleDeleteAddress = (addressId) => {
-    if (window.confirm('Are you sure you want to delete this address?')) {
-      const updatedAddresses = addresses.filter(addr => addr.id !== addressId);
-      setAddresses(updatedAddresses);
-      localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+  const handleCloseForm = () => {
+    setFormOpen(false);
+    setEditAddress(null);
+  };
+
+  const handleSubmitAddress = async (addressData) => {
+    try {
+      if (editAddress) {
+        await dispatch(updateAddress({ addressId: editAddress.id, addressData }));
+      } else {
+        await dispatch(createAddress(addressData));
+      }
+      // Refresh the addresses list after save
+      await dispatch(fetchAddresses());
+      handleCloseForm();
+    } catch (error) {
+      console.error('Error saving address:', error);
+      // Form will show its own error notification
     }
   };
 
-  const handleSetDefault = (addressId) => {
-    const updatedAddresses = addresses.map(addr => ({
-      ...addr,
-      isDefault: addr.id === addressId,
-    }));
-    setAddresses(updatedAddresses);
-    localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+  const handleDeleteClick = (address) => {
+    setAddressToDelete(address);
+    setDeleteDialogOpen(true);
   };
 
-  const getAddressIcon = (label) => {
-    switch (label?.toLowerCase()) {
-      case 'home':
-        return <HomeIcon />;
-      case 'work':
-        return <WorkIcon />;
-      default:
-        return <LocationIcon />;
+  const handleConfirmDelete = async () => {
+    if (addressToDelete) {
+      try {
+        await dispatch(deleteAddress(addressToDelete.id));
+        // Refresh the addresses list after delete
+        await dispatch(fetchAddresses());
+        setDeleteDialogOpen(false);
+        setAddressToDelete(null);
+      } catch (error) {
+        console.error('Error deleting address:', error);
+        // Keep dialog open to show error, or close it based on your preference
+        setDeleteDialogOpen(false);
+        setAddressToDelete(null);
+      }
     }
   };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setAddressToDelete(null);
+  };
+
+  const handleSetDefault = async (addressId) => {
+    try {
+      await dispatch(setDefaultAddress(addressId));
+      // Refresh the addresses list after setting default
+      await dispatch(fetchAddresses());
+    } catch (error) {
+      console.error('Error setting default address:', error);
+      // The error will be shown in the UI via the error state
+    }
+  };
+
+  const getCountryName = (code) => {
+    const countries = {
+      IN: 'India',
+      US: 'United States',
+      UK: 'United Kingdom',
+      CA: 'Canada',
+      AU: 'Australia',
+    };
+    return countries[code] || code;
+  };
+
+  if (isGuest) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper sx={{ p: 4, textAlign: 'center', bgcolor: '#e3f2fd' }}>
+          <Typography variant="h6" color="primary">Please Login to Continue</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
+            You need to login or create an account to manage your delivery addresses
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Button variant="contained" onClick={() => navigate('/login')}>
+              Login
+            </Button>
+            <Button variant="outlined" onClick={() => navigate('/signup')}>
+              Sign Up
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
+    );
+  }
+
+  if (storeData.loading && storeData.addresses.length === 0) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (storeData.error) {
+    const errorMessage = typeof storeData.error === 'string' ? storeData.error : storeData.error?.message || 'Failed to load addresses';
+    const isNetworkError = errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('connect');
+    
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper sx={{ p: 4, textAlign: 'center', bgcolor: '#ffebee' }}>
+          <Typography variant="h6" color="error">
+            {isNetworkError ? 'Unable to connect to server' : 'Error loading addresses'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            {isNetworkError 
+              ? 'Please make sure the backend server is running and try again.'
+              : errorMessage
+            }
+          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={() => dispatch(fetchAddresses())}
+            sx={{ mt: 1 }}
+          >
+            Retry
+          </Button>
+        </Paper>
+      </Container>
+    );
+  }
 
   return (
-    <>
-      <Header />
-      <Container maxWidth="md" sx={{ py: 4, mt: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4" component="h1" color="primary" fontWeight="bold">
-            Saved Addresses
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Add New Address
-          </Button>
-        </Box>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          Saved Addresses
+        </Typography>
+        <Button
+          startIcon={<AddIcon />}
+          variant="contained"
+          onClick={() => handleOpenForm()}
+        >
+          Add New Address
+        </Button>
+      </Box>
 
-      {addresses.length === 0 ? (
+      {storeData.addresses.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No Saved Addresses
+          <Typography variant="h6" color="text.secondary">
+            No saved addresses
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Add your delivery addresses to make checkout faster and easier.
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Add your delivery addresses for faster checkout
           </Typography>
           <Button
-            variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
+            variant="outlined"
+            onClick={() => handleOpenForm()}
+            sx={{ mt: 2 }}
           >
             Add Your First Address
           </Button>
         </Paper>
       ) : (
         <Grid container spacing={3}>
-          {addresses.map((address) => (
-            <Grid item xs={12} md={6} key={address.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {storeData.addresses.map((address) => (
+            <Grid item xs={12} sm={6} md={4} key={address.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                  border: address.isDefault ? '2px solid' : '1px solid',
+                  borderColor: address.isDefault ? 'primary.main' : 'divider',
+                }}
+              >
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" alignItems="center" gap={1} mb={2}>
-                    {getAddressIcon(address.label)}
-                    <Typography variant="h6" color="primary">
-                      {address.label || 'Address'}
-                    </Typography>
+                  {/* Address Type and Default Badge */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Chip
+                      icon={address.addressType === 'home' ? <HomeIcon /> : <WorkIcon />}
+                      label={address.addressType?.toUpperCase() || 'HOME'}
+                      size="small"
+                      color={address.addressType === 'home' ? 'primary' : 'secondary'}
+                    />
                     {address.isDefault && (
-                      <Chip label="Default" size="small" color="primary" />
+                      <Chip
+                        icon={<StarIcon />}
+                        label="DEFAULT"
+                        size="small"
+                        color="success"
+                      />
                     )}
                   </Box>
-                  
-                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    {address.name}
+
+                  {/* Name and Phone */}
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    {address.fullName}
                   </Typography>
-                  
-                  {address.phone && (
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Phone: {address.phone}
-                    </Typography>
-                  )}
-                  
-                  <Typography variant="body2" gutterBottom>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {address.phoneNumber}
+                  </Typography>
+
+                  {/* Address */}
+                  <Typography variant="body2" sx={{ mt: 1.5 }}>
                     {address.addressLine1}
                   </Typography>
-                  
                   {address.addressLine2 && (
-                    <Typography variant="body2" gutterBottom>
+                    <Typography variant="body2">
                       {address.addressLine2}
                     </Typography>
                   )}
-                  
                   <Typography variant="body2">
-                    {address.city}, {address.state} - {address.pincode}
+                    {address.city}, {address.state}
                   </Typography>
-                </CardContent>
-                
-                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                  <Box>
+                  <Typography variant="body2">
+                    {address.pincode}
+                  </Typography>
+
+                  {/* Action Buttons */}
+                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                    {!address.isDefault && (
+                      <Button
+                        size="small"
+                        startIcon={<StarBorderIcon />}
+                        onClick={() => handleSetDefault(address.id)}
+                        disabled={storeData?.loading}
+                      >
+                        Set Default
+                      </Button>
+                    )}
                     <IconButton
                       size="small"
-                      onClick={() => handleOpenDialog(address)}
-                      color="primary"
+                      onClick={() => handleOpenForm(address)}
+                      disabled={storeData?.loading}
+                      aria-label="Edit address"
                     >
-                      <EditIcon />
+                      <EditIcon fontSize="small" />
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDeleteAddress(address.id)}
                       color="error"
+                      onClick={() => handleDeleteClick(address)}
+                      disabled={storeData?.loading}
+                      aria-label="Delete address"
                     >
-                      <DeleteIcon />
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
-                  
-                  {!address.isDefault && (
-                    <Button
-                      size="small"
-                      onClick={() => handleSetDefault(address.id)}
-                    >
-                      Set as Default
-                    </Button>
-                  )}
-                </CardActions>
+                </CardContent>
               </Card>
             </Grid>
           ))}
         </Grid>
       )}
 
-      {/* Add/Edit Address Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingAddress ? 'Edit Address' : 'Add New Address'}
-        </DialogTitle>
+      {/* Address Form Dialog */}
+      <AddressForm
+        open={formOpen}
+        onClose={handleCloseForm}
+        onSubmit={handleSubmitAddress}
+        initialAddress={editAddress}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleCancelDelete}>
+        <DialogTitle>Delete Address</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="label"
-                label="Address Label"
-                value={formData.label}
-                onChange={handleInputChange}
-                fullWidth
-                placeholder="e.g., Home, Work"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="name"
-                label="Full Name *"
-                value={formData.name}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="phone"
-                label="Phone Number"
-                value={formData.phone}
-                onChange={handleInputChange}
-                fullWidth
-                type="tel"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="addressLine1"
-                label="Address Line 1 *"
-                value={formData.addressLine1}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                placeholder="Street address, building name"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="addressLine2"
-                label="Address Line 2"
-                value={formData.addressLine2}
-                onChange={handleInputChange}
-                fullWidth
-                placeholder="Apartment, suite, floor (optional)"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="city"
-                label="City *"
-                value={formData.city}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="state"
-                label="State"
-                value={formData.state}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="pincode"
-                label="Pincode *"
-                value={formData.pincode}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                type="number"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center">
-                <input
-                  type="checkbox"
-                  id="isDefault"
-                  name="isDefault"
-                  checked={formData.isDefault}
-                  onChange={handleInputChange}
-                />
-                <label htmlFor="isDefault" style={{ marginLeft: 8 }}>
-                  Set as default address
-                </label>
-              </Box>
-            </Grid>
-          </Grid>
+          <Typography>
+            Are you sure you want to delete this address?
+          </Typography>
+          {addressToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {addressToDelete.fullName}
+              </Typography>
+              <Typography variant="body2">{addressToDelete.addressLine1}</Typography>
+              {addressToDelete.addressLine2 && (
+                <Typography variant="body2">{addressToDelete.addressLine2}</Typography>
+              )}
+              <Typography variant="body2">
+                {addressToDelete.city}, {addressToDelete.state} - {addressToDelete.pincode}
+              </Typography>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSaveAddress} variant="contained">
-            {editingAddress ? 'Update' : 'Save'} Address
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
-      </Container>
-    </>
+    </Container>
   );
 };
 

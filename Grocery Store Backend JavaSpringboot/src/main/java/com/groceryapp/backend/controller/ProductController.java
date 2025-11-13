@@ -59,6 +59,13 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
     
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponseDto>> searchProducts(@RequestParam String query) {
+        log.info("Received search request for query: {}", query);
+        List<ProductResponseDto> products = productService.searchProducts(query.trim());
+        return ResponseEntity.ok(products);
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDto> getProductById(@PathVariable UUID id) {
         log.info("Received request to get product with ID: {}", id);

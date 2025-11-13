@@ -8,37 +8,25 @@ import {
   UPDATE_CART_ITEM_REQUEST,
   UPDATE_CART_ITEM_SUCCESS,
   UPDATE_CART_ITEM_FAILURE,
-  REMOVE_FROM_CART_REQUEST,
-  REMOVE_FROM_CART_SUCCESS,
-  REMOVE_FROM_CART_FAILURE,
-  CLEAR_CART,
-  CLEAR_CART_ERROR,
-  ADD_ITEM_LOCALLY,
-  UPDATE_ITEM_LOCALLY,
-  REMOVE_ITEM_LOCALLY,
-} from "../actionTypes";
+  REMOVE_CART_ITEM_REQUEST,
+  REMOVE_CART_ITEM_SUCCESS,
+  REMOVE_CART_ITEM_FAILURE,
+  CLEAR_CART_REQUEST,
+  CLEAR_CART_SUCCESS,
+  CLEAR_CART_FAILURE,
+} from '../actionTypes';
+import { LOGIN_SUCCESS, LOGOUT_SUCCESS } from '../actionTypes';
 
 const initialState = {
   items: [],
+  totalAmount: 0,
   loading: false,
   error: null,
-  totalItems: 0,
-  totalAmount: 0,
-  lastUpdated: null,
-};
-
-// Helper function to calculate totals
-const calculateTotals = (items) => {
-  const totalItems = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
-  const totalAmount = items.reduce((sum, item) => 
-    sum + (item.subtotal || (item.priceAtAdd || 0) * (item.quantity || 0)), 0
-  );
-  return { totalItems, totalAmount };
 };
 
 const cartReducer = (state = initialState, action) => {
   switch (action.type) {
-    // 🔹 FETCH CART
+    // ========== FETCH CART ==========
     case FETCH_CART_REQUEST:
       return {
         ...state,
@@ -47,15 +35,15 @@ const cartReducer = (state = initialState, action) => {
       };
 
     case FETCH_CART_SUCCESS:
-      const fetchedItems = action.payload.items || [];
+      const fetchItems = action.payload.items || [];
       return {
         ...state,
         loading: false,
-        items: fetchedItems,
-        totalItems: action.payload.totalItems || action.payload.totalQuantity || 0,
-        totalAmount: action.payload.totalPrice || 0,
-        lastUpdated: new Date().toISOString(),
-        error: null,
+        items: fetchItems.map(item => ({
+          ...item,
+          id: item.cartItemId || item.id
+        })),
+        totalAmount: action.payload.totalPrice || action.payload.totalAmount || 0,
       };
 
     case FETCH_CART_FAILURE:
@@ -65,37 +53,28 @@ const cartReducer = (state = initialState, action) => {
         error: action.payload,
       };
 
-    // 🔹 ADD TO CART
+    // ========== ADD TO CART ==========
     case ADD_TO_CART_REQUEST:
       return {
         ...state,
-        loading: true,
         error: null,
       };
 
     case ADD_TO_CART_SUCCESS:
-      const { item, isUpdate } = action.payload;
-      let updatedItems;
-      
-      if (isUpdate) {
-        // Update existing item
-        updatedItems = state.items.map(existingItem => 
-          existingItem.productId === item.productId ? item : existingItem
-        );
-      } else {
-        // Add new item
-        updatedItems = [...state.items, item];
-      }
-      
-      const addTotals = calculateTotals(updatedItems);
+      const addItems = action.payload.items || [];
+      console.log('✅ Cart updated after add:', {
+        itemsCount: addItems.length,
+        items: addItems,
+        totalAmount: action.payload.totalPrice || action.payload.totalAmount || 0
+      });
       return {
         ...state,
         loading: false,
-        items: updatedItems,
-        totalItems: addTotals.totalItems,
-        totalAmount: addTotals.totalAmount,
-        lastUpdated: new Date().toISOString(),
-        error: null,
+        items: addItems.map(item => ({
+          ...item,
+          id: item.cartItemId || item.id
+        })),
+        totalAmount: action.payload.totalPrice || action.payload.totalAmount || 0,
       };
 
     case ADD_TO_CART_FAILURE:
@@ -105,27 +84,23 @@ const cartReducer = (state = initialState, action) => {
         error: action.payload,
       };
 
-    // 🔹 UPDATE CART ITEM
+    // ========== UPDATE CART ITEM ==========
     case UPDATE_CART_ITEM_REQUEST:
       return {
         ...state,
-        loading: true,
         error: null,
       };
 
     case UPDATE_CART_ITEM_SUCCESS:
-      const updatedItemsList = state.items.map(item => 
-        item.id === action.payload.id ? { ...item, ...action.payload } : item
-      );
-      const updateTotals = calculateTotals(updatedItemsList);
+      const updateItems = action.payload.items || [];
       return {
         ...state,
         loading: false,
-        items: updatedItemsList,
-        totalItems: updateTotals.totalItems,
-        totalAmount: updateTotals.totalAmount,
-        lastUpdated: new Date().toISOString(),
-        error: null,
+        items: updateItems.map(item => ({
+          ...item,
+          id: item.cartItemId || item.id
+        })),
+        totalAmount: action.payload.totalPrice || action.payload.totalAmount || 0,
       };
 
     case UPDATE_CART_ITEM_FAILURE:
@@ -135,111 +110,66 @@ const cartReducer = (state = initialState, action) => {
         error: action.payload,
       };
 
-    // 🔹 REMOVE FROM CART
-    case REMOVE_FROM_CART_REQUEST:
+    // ========== REMOVE CART ITEM ==========
+    case REMOVE_CART_ITEM_REQUEST:
       return {
         ...state,
-        loading: true,
         error: null,
       };
 
-    case REMOVE_FROM_CART_SUCCESS:
-      const filteredItems = state.items.filter(item => item.id !== action.payload);
-      const removeTotals = calculateTotals(filteredItems);
+    case REMOVE_CART_ITEM_SUCCESS:
+      const removeItems = action.payload.items || [];
       return {
         ...state,
         loading: false,
-        items: filteredItems,
-        totalItems: removeTotals.totalItems,
-        totalAmount: removeTotals.totalAmount,
-        lastUpdated: new Date().toISOString(),
-        error: null,
+        items: removeItems.map(item => ({
+          ...item,
+          id: item.cartItemId || item.id
+        })),
+        totalAmount: action.payload.totalPrice || action.payload.totalAmount || 0,
       };
 
-    case REMOVE_FROM_CART_FAILURE:
+    case REMOVE_CART_ITEM_FAILURE:
       return {
         ...state,
         loading: false,
         error: action.payload,
       };
 
-    // 🔹 LOCAL CART OPERATIONS
-    case ADD_ITEM_LOCALLY:
-      const { product, quantity = 1 } = action.payload;
-      const existingItem = state.items.find(item => item.productId === product.id);
-      let localAddItems;
-      
-      if (existingItem) {
-        localAddItems = state.items.map(item => 
-          item.productId === product.id 
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        localAddItems = [...state.items, {
-          id: Date.now(), // Temporary ID
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          quantity: quantity,
-          image: product.image,
-        }];
-      }
-      
-      const localAddTotals = calculateTotals(localAddItems);
+    // ========== CLEAR CART ==========
+    case CLEAR_CART_REQUEST:
       return {
         ...state,
-        items: localAddItems,
-        totalItems: localAddTotals.totalItems,
-        totalAmount: localAddTotals.totalAmount,
-        lastUpdated: new Date().toISOString(),
+        loading: true,
+        error: null,
       };
 
-    case UPDATE_ITEM_LOCALLY:
-      const { itemId, quantity: newQuantity } = action.payload;
-      let localUpdateItems;
-      
-      if (newQuantity <= 0) {
-        localUpdateItems = state.items.filter(item => item.id !== itemId);
-      } else {
-        localUpdateItems = state.items.map(item => 
-          item.id === itemId ? { ...item, quantity: newQuantity } : item
-        );
-      }
-      
-      const localUpdateTotals = calculateTotals(localUpdateItems);
+    case CLEAR_CART_SUCCESS:
       return {
         ...state,
-        items: localUpdateItems,
-        totalItems: localUpdateTotals.totalItems,
-        totalAmount: localUpdateTotals.totalAmount,
-        lastUpdated: new Date().toISOString(),
+        loading: false,
+        items: [],
+        totalAmount: 0,
       };
 
-    case REMOVE_ITEM_LOCALLY:
-      const localRemoveItems = state.items.filter(item => item.id !== action.payload);
-      const localRemoveTotals = calculateTotals(localRemoveItems);
+    case CLEAR_CART_FAILURE:
       return {
         ...state,
-        items: localRemoveItems,
-        totalItems: localRemoveTotals.totalItems,
-        totalAmount: localRemoveTotals.totalAmount,
-        lastUpdated: new Date().toISOString(),
+        loading: false,
+        error: action.payload,
       };
 
-    // 🔹 UTILITY ACTIONS
-    case CLEAR_CART:
+    // ========== AUTH ACTIONS (Clear cart on logout) ==========
+    case LOGIN_SUCCESS:
+
+      return state;
+
+    case LOGOUT_SUCCESS:
+
       return {
         ...state,
         items: [],
-        totalItems: 0,
         totalAmount: 0,
-        lastUpdated: null,
-      };
-
-    case CLEAR_CART_ERROR:
-      return {
-        ...state,
         error: null,
       };
 

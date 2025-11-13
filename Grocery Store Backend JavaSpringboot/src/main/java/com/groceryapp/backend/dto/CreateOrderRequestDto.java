@@ -22,7 +22,8 @@ public class CreateOrderRequestDto {
     private List<OrderItemDto> items;
     
     @NotBlank(message = "Payment method is required")
-    @Pattern(regexp = "COD|CARD|UPI", message = "Payment method must be COD, CARD, or UPI")
+    @Pattern(regexp = "(?i)(COD|CARD|UPI|wallet|card|netbanking|upi|cod)", 
+             message = "Payment method must be COD, CARD, UPI, wallet, netbanking, or similar")
     private String paymentMethod;
     
     @NotNull(message = "Delivery address ID is required")

@@ -1,18 +1,17 @@
 package com.groceryapp.backend.controller;
 
+import com.groceryapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -24,6 +23,7 @@ import java.util.stream.Collectors;
 public class AdminController {
     
     private final JdbcTemplate jdbcTemplate;
+    private final UserRepository userRepository;
     
     @PostMapping("/load-products")
     public ResponseEntity<Map<String, Object>> loadProducts() {
@@ -33,7 +33,7 @@ public class AdminController {
             log.info("Starting product load from SQL file...");
             
             // Read the SQL file from the project root
-            String sqlFilePath = "c:\\Vamsi\\React js\\App\\Grocery Store\\Grocery Store Backend JavaSpringboot\\COMPLETE_PRODUCT_INSERT.sql";
+            String sqlFilePath = "c:\\Vamsi\\React js\\App\\Grocery Store\\Grocery Store Backend JavaSpringboot\\COMPLETE_784_PRODUCTS.sql";
             String sql = Files.readString(Paths.get(sqlFilePath), StandardCharsets.UTF_8);
             
             // Split by semicolon and execute each statement
@@ -97,6 +97,42 @@ public class AdminController {
             
         } catch (Exception e) {
             log.error("Error getting product stats", e);
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    @GetMapping("/users")
+    public ResponseEntity<Map<String, Object>> getAllUsers() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            var users = userRepository.findAll();
+            
+            // Map to safe user info (no passwords)
+            List<Map<String, Object>> userList = users.stream()
+                .map(user -> {
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("id", user.getId());
+                    userMap.put("email", user.getEmail());
+                    userMap.put("name", user.getName());
+                    userMap.put("phoneNumber", user.getPhoneNumber());
+                    userMap.put("createdAt", user.getCreatedAt());
+                    return userMap;
+                })
+                .collect(Collectors.toList());
+            
+            response.put("success", true);
+            response.put("users", userList);
+            response.put("totalUsers", userList.size());
+            
+            log.info("Retrieved {} users", userList.size());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error getting users", e);
             response.put("success", false);
             response.put("error", e.getMessage());
             return ResponseEntity.status(500).body(response);

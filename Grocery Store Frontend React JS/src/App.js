@@ -1,77 +1,42 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Box } from '@mui/material';
-import { Provider } from 'react-redux';
-import { SnackbarProvider } from 'notistack';
-import store from './redux/store';
-import theme from './theme/theme';
-import { AuthProvider } from './context/AuthContext';
-import { LocationProvider } from './context/LocationContext';
-
-// Direct imports - no lazy loading to avoid chunk errors
-import HomePage from './pages/grocery/HomePage';
-import CategoryPage from './pages/grocery/CategoryPage';
-import ProductDetailPage from './pages/grocery/ProductDetailPage';
-import CartPage from './pages/grocery/CartPage';
-import SearchPage from './pages/grocery/SearchPage';
-import CheckoutPage from './pages/grocery/CheckoutPage';
-import OrdersPage from './pages/grocery/OrdersPage';
-import GiftCardsPage from './pages/grocery/GiftCardsPage';
-import PrivacyPage from './pages/grocery/PrivacyPage';
+import React, { useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Box } from '@mui/material';
+import { useDispatch } from 'react-redux';
+import { fetchCart } from './redux/actions/cartActions';
+import Header from './components/Header';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import SignupPage from './pages/SignupPage';
+import MyOrdersPage from './pages/MyOrdersPage';
 import SavedAddressesPage from './pages/SavedAddressesPage';
-import ProtectedRoute from './components/ProtectedRoute';
+import PaymentPage from './pages/PaymentPage';
+import CategoryProductsPage from './pages/CategoryProductsPage';
 
 function App() {
-  return (
-    <Provider store={store}>
-      <AuthProvider>
-        <LocationProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <SnackbarProvider 
-            maxSnack={3}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            autoHideDuration={3000}
-          >
-            <Router>
-              <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                <Box component="main" sx={{ flexGrow: 1, backgroundColor: 'background.default' }}>
-                  <Routes>
-                    {/* Main Routes - Public */}
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/category/:category" element={<CategoryPage />} />
-                    <Route path="/product/:id" element={<ProductDetailPage />} />
-                    <Route path="/search" element={<SearchPage />} />
-                    <Route path="/cart" element={<CartPage />} />
+  const dispatch = useDispatch();
 
-                    {/* Auth Routes */}
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    
-                    {/* Protected Routes - Require Login */}
-                    <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-                    <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-                    <Route path="/addresses" element={<ProtectedRoute><SavedAddressesPage /></ProtectedRoute>} />
-                    <Route path="/gift-cards" element={<ProtectedRoute><GiftCardsPage /></ProtectedRoute>} />
-                    <Route path="/privacy" element={<ProtectedRoute><PrivacyPage /></ProtectedRoute>} />
-                    
-                    {/* Fallback route */}
-                    <Route path="*" element={<HomePage />} />
-                  </Routes>
-                </Box>
-              </Box>
-            </Router>
-          </SnackbarProvider>
-        </ThemeProvider>
-      </LocationProvider>
-      </AuthProvider>
-    </Provider>
+  useEffect(() => {
+    // Fetch cart on app load
+    if (process.env.NODE_ENV !== 'test') {
+      dispatch(fetchCart());
+    }
+  }, [dispatch]);
+
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header />
+      <Box component="main" sx={{ flexGrow: 1, bgcolor: 'background.default' }}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/category" element={<CategoryProductsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/my-orders" element={<MyOrdersPage />} />
+          <Route path="/saved-addresses" element={<SavedAddressesPage />} />
+          <Route path="/payment" element={<PaymentPage />} />
+        </Routes>
+      </Box>
+    </Box>
   );
 }
 

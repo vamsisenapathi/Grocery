@@ -1,0 +1,83 @@
+package com.groceryapp.backend.controller;
+
+import com.groceryapp.backend.dto.OtpRequest;
+import com.groceryapp.backend.dto.OtpVerifyRequest;
+import com.groceryapp.backend.service.OtpService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/otp")
+@CrossOrigin(origins = "*")
+public class OtpController {
+    
+    @Autowired
+    private OtpService otpService;
+    
+    /**
+     * Send OTP to email or phone
+     */
+    @PostMapping("/send")
+    public ResponseEntity<Map<String, Object>> sendOtp(@RequestBody OtpRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String message;
+            if ("EMAIL".equalsIgnoreCase(request.getType())) {
+                message = otpService.sendEmailOtp(request.getIdentifier());
+            } else if ("PHONE".equalsIgnoreCase(request.getType())) {
+                message = otpService.sendSmsOtp(request.getIdentifier());
+            } else {
+                response.put("success", false);
+                response.put("message", "Invalid OTP type. Use EMAIL or PHONE");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            response.put("success", true);
+            response.put("message", message);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    /**
+     * Verify OTP code
+     */
+    @PostMapping("/verify")
+    public ResponseEntity<Map<String, Object>> verifyOtp(@RequestBody OtpVerifyRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            boolean verified = otpService.verifyOtp(
+                    request.getIdentifier(),
+                    request.getOtpCode(),
+                    request.getType()
+            );
+            
+            response.put("success", verified);
+            response.put("message", verified ? "OTP verified successfully" : "Invalid OTP");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    /**
+     * Resend OTP (same as send, but explicit endpoint)
+     */
+    @PostMapping("/resend")
+    public ResponseEntity<Map<String, Object>> resendOtp(@RequestBody OtpRequest request) {
+        return sendOtp(request);
+    }
+}

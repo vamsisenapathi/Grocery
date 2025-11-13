@@ -21,7 +21,7 @@ public class RegisterRequestDto {
     private String email;
     
     @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @Size(min = 8, max = 13, message = "Password must be between 8 and 13 characters")
     private String password;
     
     private String phoneNumber;

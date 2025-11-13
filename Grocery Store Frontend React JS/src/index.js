@@ -1,13 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { SnackbarProvider } from 'notistack';
 import App from './App';
+import theme from './theme';
+import store from './redux/store';
+import { LocationProvider } from './context/LocationContext';
 
-// Create root element
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
-// Render the app
 root.render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+      <BrowserRouter>
+        <LocationProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} autoHideDuration={3000}>
+              <App />
+            </SnackbarProvider>
+          </ThemeProvider>
+        </LocationProvider>
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>
 );

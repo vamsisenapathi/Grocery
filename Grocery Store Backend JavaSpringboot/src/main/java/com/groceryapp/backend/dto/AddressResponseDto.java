@@ -1,17 +1,19 @@
 package com.groceryapp.backend.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddressResponseDto {
-    
+
     private UUID id;
     private UUID userId;
     private String fullName;
@@ -21,8 +23,10 @@ public class AddressResponseDto {
     private String city;
     private String state;
     private String pincode;
+    private Double latitude;
+    private Double longitude;
     private String addressType;
     private Boolean isDefault;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

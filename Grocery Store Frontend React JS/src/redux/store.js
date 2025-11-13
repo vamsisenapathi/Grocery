@@ -1,21 +1,26 @@
-import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./reducers/authReducer";
-import productReducer from "./reducers/productReducer";
-import cartReducer from "./reducers/cartReducer";
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import {thunk} from 'redux-thunk';
+import authReducer from './reducers/authReducer';
+import cartReducer from './reducers/cartReducer';
+import productReducer from './reducers/productReducer';
+import categoryReducer from './reducers/categoryReducer';
+import addressReducer from './reducers/addressReducer';
+import orderReducer from './reducers/orderReducer';
 
-const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    products: productReducer,
-    cart: cartReducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        // Ignore these action types for serialization check
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
-      },
-    }),
+// Combine all reducers
+const rootReducer = combineReducers({
+  auth: authReducer,
+  cart: cartReducer,
+  products: productReducer,
+  categories: categoryReducer,
+  addresses: addressReducer,
+  orders: orderReducer,
 });
+
+// Create store with thunk middleware
+export const store = createStore(
+  rootReducer,
+  applyMiddleware(thunk)
+);
 
 export default store;

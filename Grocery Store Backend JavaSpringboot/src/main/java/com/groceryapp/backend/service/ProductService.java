@@ -90,6 +90,18 @@ public class ProductService {
     }
     
     @Transactional(readOnly = true)
+    public List<String> getAllCategories() {
+        log.info("Fetching all unique categories");
+        
+        List<Product> products = productRepository.findAll();
+        return products.stream()
+                .map(product -> product.getCategory().getName())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+    
+    @Transactional(readOnly = true)
     public ProductResponseDto getProductById(@NonNull UUID productId) {
         log.info("Fetching product with ID: {}", productId);
         
@@ -296,5 +308,63 @@ public class ProductService {
         dto.setUpdatedAt(product.getUpdatedAt());
         
         return dto;
+    }
+    
+    /**
+     * Decrease product stock (when adding to cart or placing order)
+     * @param productId The product ID
+     * @param quantity The quantity to decrease
+     * @throws ProductNotFoundException if product not found
+     * @throws RuntimeException if insufficient stock
+     */
+    @Transactional
+    public void decreaseStock(UUID productId, int quantity) {
+        log.info("Decreasing stock for product: {} by quantity: {}", productId, quantity);
+        
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+        
+        if (product.getStock() < quantity) {
+            throw new RuntimeException(String.format(
+                "Insufficient stock for product: %s. Available: %d, Requested: %d",
+                product.getName(), product.getStock(), quantity
+            ));
+        }
+        
+        product.setStock(product.getStock() - quantity);
+        
+        // Update availability if stock becomes zero
+        if (product.getStock() == 0) {
+            product.setIsAvailable(false);
+            log.info("Product {} is now out of stock", product.getName());
+        }
+        
+        productRepository.save(product);
+        log.info("Stock decreased successfully. New stock: {}", product.getStock());
+    }
+    
+    /**
+     * Increase product stock (when removing from cart or cancelling order)
+     * @param productId The product ID
+     * @param quantity The quantity to increase
+     * @throws ProductNotFoundException if product not found
+     */
+    @Transactional
+    public void increaseStock(UUID productId, int quantity) {
+        log.info("Increasing stock for product: {} by quantity: {}", productId, quantity);
+        
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+        
+        product.setStock(product.getStock() + quantity);
+        
+        // Make product available again if it was out of stock
+        if (!product.getIsAvailable() && product.getStock() > 0) {
+            product.setIsAvailable(true);
+            log.info("Product {} is now back in stock", product.getName());
+        }
+        
+        productRepository.save(product);
+        log.info("Stock increased successfully. New stock: {}", product.getStock());
     }
 }
